@@ -17,6 +17,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ListView;
+import android.widget.ProgressBar;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -32,6 +33,7 @@ public class MainActivity extends AppCompatActivity {
     LinearLayout linearLayout;
     ListView listView;
     String links[];
+    ProgressBar progressBar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,6 +47,7 @@ public class MainActivity extends AppCompatActivity {
         linearLayout = findViewById(R.id.linearlay);
         dwnld = findViewById(R.id.downloadbtn);
         listView = findViewById(R.id.list);
+        progressBar = findViewById(R.id.progressBar);
         editText = findViewById(R.id.eturl);
         listView.setAdapter(new ArrayAdapter<>(this, R.layout.support_simple_spinner_dropdown_item, links));
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -61,56 +64,10 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    private void downloadImage(String imgurl) {
 
-        HttpURLConnection httpURLConnection = null;
-        InputStream inputStream = null;
-        FileOutputStream fileOutputStream = null;
-        File file = null;
-        try {
-            URL url = new URL(imgurl);
-            httpURLConnection = (HttpURLConnection) url.openConnection();
-            inputStream = httpURLConnection.getInputStream();
-            file = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getAbsolutePath() + "/" + Uri.parse(imgurl).getLastPathSegment());
-            Log.d("msg", file.getAbsolutePath());
-            fileOutputStream = new FileOutputStream(file);
-            int read = -1;
-            byte b[] = new byte[1024];
-            while ((read = inputStream.read(b)) != -1) {
-
-                fileOutputStream.write(b, 0, read);
-            }
-        } catch (MalformedURLException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } finally {
-            this.runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    linearLayout.setVisibility(View.INVISIBLE);
-                }
-            });
-            if (httpURLConnection != null)
-                httpURLConnection.disconnect();
-            if (inputStream != null) {
-                try {
-                    inputStream.close();
-                } catch (IOException e) {
-                    Log.d("msg", e.getMessage());
-                }
-            }
-            if (fileOutputStream != null) {
-                try {
-                    fileOutputStream.close();
-                } catch (IOException e) {
-                    Log.d("msg", e.getMessage());
-                }
-            }
-        }
-    }
-
-    class Task extends AsyncTask<String, Void, Void> {
+    class Task extends AsyncTask<String, Integer, Void> {
+        int count = 0;
+        int contentl=-1;
 
         @Override
         protected void onPostExecute(Void aVoid) {
@@ -123,13 +80,58 @@ public class MainActivity extends AppCompatActivity {
         }
 
         @Override
-        protected void onProgressUpdate(Void... values) {
-
+        protected void onProgressUpdate(Integer... values) {
+            int progress=(int)(((double)values[0]/contentl)*100);
+            progressBar.setProgress(progress);
         }
 
         @Override
         protected Void doInBackground(String... voids) {
-            downloadImage(voids[0]);
+
+            String imgurl = voids[0];
+            HttpURLConnection httpURLConnection = null;
+            InputStream inputStream = null;
+            FileOutputStream fileOutputStream = null;
+            File file = null;
+            try {
+                URL url = new URL(imgurl);
+                httpURLConnection = (HttpURLConnection) url.openConnection();
+                contentl=httpURLConnection.getContentLength();
+                inputStream = httpURLConnection.getInputStream();
+                file = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getAbsolutePath() + "/" + Uri.parse(imgurl).getLastPathSegment());
+                Log.d("msg", file.getAbsolutePath());
+                fileOutputStream = new FileOutputStream(file);
+                int read = -1;
+                byte b[] = new byte[1024];
+                while ((read = inputStream.read(b)) != -1) {
+
+                    fileOutputStream.write(b, 0, read);
+                    count = count + read;
+                    publishProgress(count);
+
+                }
+            } catch (MalformedURLException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            } finally {
+                if (httpURLConnection != null)
+                    httpURLConnection.disconnect();
+                if (inputStream != null) {
+                    try {
+                        inputStream.close();
+                    } catch (IOException e) {
+                        Log.d("msg", e.getMessage());
+                    }
+                }
+                if (fileOutputStream != null) {
+                    try {
+                        fileOutputStream.close();
+                    } catch (IOException e) {
+                        Log.d("msg", e.getMessage());
+                    }
+                }
+            }
             return null;
         }
     }
