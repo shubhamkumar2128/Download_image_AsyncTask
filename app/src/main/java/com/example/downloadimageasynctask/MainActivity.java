@@ -41,7 +41,6 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.INTERNET) != PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.INTERNET}, 121);
-
         }
         links = getResources().getStringArray(R.array.links);
         linearLayout = findViewById(R.id.linearlay);
@@ -67,7 +66,7 @@ public class MainActivity extends AppCompatActivity {
 
     class Task extends AsyncTask<String, Integer, Void> {
         int count = 0;
-        int contentl=-1;
+        int contentl = -1;
 
         @Override
         protected void onPostExecute(Void aVoid) {
@@ -81,7 +80,7 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         protected void onProgressUpdate(Integer... values) {
-            int progress=(int)(((double)values[0]/contentl)*100);
+            int progress = (int) (((double) values[0] / contentl) * 100);
             progressBar.setProgress(progress);
         }
 
@@ -96,7 +95,7 @@ public class MainActivity extends AppCompatActivity {
             try {
                 URL url = new URL(imgurl);
                 httpURLConnection = (HttpURLConnection) url.openConnection();
-                contentl=httpURLConnection.getContentLength();
+                contentl = httpURLConnection.getContentLength();
                 inputStream = httpURLConnection.getInputStream();
                 file = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getAbsolutePath() + "/" + Uri.parse(imgurl).getLastPathSegment());
                 Log.d("msg", file.getAbsolutePath());
