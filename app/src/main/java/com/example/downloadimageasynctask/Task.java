@@ -1,10 +1,10 @@
 package com.example.downloadimageasynctask;
 
+import android.app.Activity;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Environment;
 import android.util.Log;
-import android.view.View;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -17,21 +17,45 @@ import java.net.URL;
 public class Task extends AsyncTask<String, Integer, Void> {
     int count = 0;
     int contentl = -1;
+    private Activity activity;
+
+    public void onAttach(Activity activity) {
+        this.activity = activity;
+    }
+
+    public Task(Activity activity) {
+        this.activity = activity;
+    }
+
+    public void onDetach() {
+        activity = null;
+    }
 
     @Override
     protected void onPostExecute(Void aVoid) {
-        // linearLayout.setVisibility(View.INVISIBLE);
+        if (activity == null) {
+        } else {
+            ((MainActivity) activity).hideProgressBeforeDownload();
+        }
     }
 
     @Override
     protected void onPreExecute() {
-        //linearLayout.setVisibility(View.VISIBLE);
+        if (activity == null) {
+        } else {
+            ((MainActivity) activity).showProgressBeforeDownload();
+        }
     }
 
     @Override
     protected void onProgressUpdate(Integer... values) {
-        int progress = (int) (((double) values[0] / contentl) * 100);
-        //   progressBar.setProgress(progress);
+
+        if (activity == null) {
+
+        } else {
+            int progress = (int) (((double) values[0] / contentl) * 100);
+            ((MainActivity) activity).updateProgress(progress);
+        }
     }
 
     @Override

@@ -6,6 +6,7 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Environment;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -34,6 +35,7 @@ public class MainActivity extends AppCompatActivity {
     ListView listView;
     String links[];
     ProgressBar progressBar;
+    NonUIFragment fragment;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -55,16 +57,43 @@ public class MainActivity extends AppCompatActivity {
                 editText.setText(links[position]);
             }
         });
+        if (savedInstanceState == null) {
+            fragment = new NonUIFragment();
+            getSupportFragmentManager().beginTransaction().add(fragment, "frag").commit();
+        } else {
+            fragment = (NonUIFragment) getSupportFragmentManager().findFragmentByTag("frag");
+        }
         dwnld.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                new Task().execute(editText.getText().toString());
+                fragment.beginTask(editText.getText().toString());
             }
         });
+        if (fragment != null) {
+            if (fragment.task != null && fragment.task.getStatus() == AsyncTask.Status.RUNNING)
+                linearLayout.setVisibility(View.VISIBLE);
+        }
     }
 
+    public void showProgressBeforeDownload() {
+        if (fragment.task != null) {
+            if (linearLayout.getVisibility() != View.VISIBLE && progressBar.getProgress() != progressBar.getMax()) {
+                linearLayout.setVisibility(View.VISIBLE);
+            }
+        }
+    }
 
+    public void hideProgressBeforeDownload() {
+        if (fragment.task != null) {
+            if (linearLayout.getVisibility() == View.VISIBLE) {
+                linearLayout.setVisibility(View.GONE);
+            }
+        }
+    }
 
+    public void updateProgress(int progress) {
+        progressBar.setProgress(progress);
+    }
 
 }
 
